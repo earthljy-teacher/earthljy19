@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>파도 마스터: 물 입자 운동과 해파의 분류</title>
+<style>
+:root{
+  --bg:#eaf4fa; --panel:#ffffff; --ink:#24394d; --muted:#5f7387; --line:#d3e3ee;
+  --c1:#1a6fd6; --c2:#e2631f; --c3:#0f9168; --c4:#8a3dd0; --c5:#d42f4b; --c6:#0a8ea0;
+  --deep:#0b3a5e; --deep2:#11598a;
+}
+*{box-sizing:border-box;font-weight:400 !important;}
+html,body{margin:0;padding:0}
+body{font-family:'a시네마','a시네마L','a시네마M','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.7;}
+button,input,select,textarea{font-family:inherit;font-size:15px;color:inherit}
+.c1{color:var(--c1)}.c2{color:var(--c2)}.c3{color:var(--c3)}.c4{color:var(--c4)}.c5{color:var(--c5)}.c6{color:var(--c6)}
+.muted{color:var(--muted)}.small{font-size:13.5px}
+header.top{background:linear-gradient(120deg,#0b3a5e,#1466a3 60%,#1d8fc4);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ttl{font-size:27px;letter-spacing:1px;line-height:1.3}
+.ttl .y{color:#ffd66b}
+.subt{font-size:14px;color:#cfe8fb}
+.brand{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:6px 14px;margin-left:auto}
+.brand .bn{font-size:18px;letter-spacing:2px;color:#fff;line-height:1.2}
+.brand .bn span{color:#7fe0ff}
+.brand .bm{font-size:12.5px;color:#d8efff;line-height:1.3}
+nav.tabs{display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:0;z-index:20}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:#f4f9fc;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.tab.active{background:var(--deep2);color:#fff;border-color:var(--deep2)}
+.tab.done{color:var(--c3);border-color:#9fdcc6;background:#ecfaf4}
+.tab.done.active{background:var(--c3);color:#fff}
+.tab.locked{opacity:.5;cursor:not-allowed}
+.prog{height:6px;background:#d7e8f3}
+.prog>div{height:100%;background:linear-gradient(90deg,#1d8fc4,#11c08a);width:0;transition:width .6s}
+main{max-width:1240px;margin:0 auto;padding:18px 16px 70px}
+.panel{display:none}.panel.show{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(16,70,110,.06);margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;margin-top:14px}
+.grid2>.card{margin-bottom:0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.grid2>.card:first-child{align-self:start;position:sticky;top:64px}
+@media(max-width:920px){.grid2{grid-template-columns:1fr}.grid2>.card:first-child{position:static}}
+h2.st{font-size:23px;margin:0 0 4px;color:var(--deep2)}
+h3{font-size:18px;margin:0 0 8px;color:var(--deep2)}
+canvas{width:100%;height:auto;display:block;border-radius:12px;background:#dff1fb;touch-action:none}
+.npc{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.npc .av{flex:0 0 54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#ffe3a3,#ffb86b);display:flex;align-items:center;justify-content:center;font-size:30px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.npc .bub{background:#fff;border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;flex:1}
+.npc .who{font-size:13px;color:var(--c2)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.btn{border:none;border-radius:10px;padding:8px 14px;background:var(--deep2);color:#fff;cursor:pointer;transition:transform .1s,filter .2s}
+.btn:hover{filter:brightness(1.12)}.btn:active{transform:scale(.97)}
+.btn.g{background:var(--c3)}.btn.o{background:var(--c2)}.btn.p{background:var(--c4)}.btn.r{background:var(--c5)}
+.btn.ghost{background:#eef5fa;color:var(--deep2);border:1px solid var(--line)}
+.btn.on{background:var(--c2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tasks{list-style:none;padding:0;margin:0 0 10px}
+.tasks li{padding:6px 10px;border-radius:10px;margin-bottom:5px;background:#f5f9fc;color:var(--muted);display:flex;gap:8px}
+.tasks li.now{background:#fff6e9;color:var(--c2);border:1px solid #ffd6b0}
+.tasks li.ok{background:#ecfaf4;color:var(--c3)}
+.work{border-top:1px dashed var(--line);padding-top:10px}
+.work p{margin:4px 0 8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:7px 0}
+input[type=number],input[type=text],select,textarea{border:1px solid #bcd3e3;border-radius:8px;padding:6px 9px;background:#fff}
+input[type=number]{width:96px}
+textarea{width:100%;min-height:120px;resize:vertical;line-height:1.7}
+label.radio{display:block;padding:6px 10px;border:1px solid var(--line);border-radius:10px;margin:5px 0;cursor:pointer;background:#f7fbfe}
+.fb{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:15px;display:none}
+.fb.show{display:block;animation:fade .3s}
+.fb.ok{background:#e9f9f2;border:1px solid #a6e3c9;color:#0d6f50}
+.fb.no{background:#fff0f1;border:1px solid #f5b8c1;color:#a3233a}
+.fb.info{background:#eef5ff;border:1px solid #bcd5f5;color:#1d4f8f}
+.slider{display:grid;grid-template-columns:120px 1fr 74px;gap:8px;align-items:center;margin:6px 0}
+.slider .v{color:var(--c2);text-align:right}
+input[type=range]{width:100%;accent-color:var(--deep2)}
+.hidden{display:none !important}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);background:#18324a;color:#fff;padding:10px 18px;border-radius:12px;opacity:0;transition:.3s;z-index:99;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.done-box{margin-top:14px;padding:14px 18px;border-radius:14px;background:linear-gradient(120deg,#e8fbf3,#e9f4ff);border:1px solid #a9dfc8;display:none}
+.done-box.show{display:block;animation:fade .4s}
+.banner{background:#fff4e6;border:1px solid #ffd09a;color:#a44b0e;border-radius:12px;padding:9px 14px;margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#f7fbfe;border-radius:10px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.opt:hover{border-color:var(--c1)}
+.opt.right{background:#e9f9f2;border-color:#7fd3b0;color:#0d6f50}
+.opt.wrong{background:#fff0f1;border-color:#f0a2ae;color:#a3233a}
+.opt:disabled{cursor:default}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;background:#eef5fa;border:1px solid var(--line);font-size:13.5px;margin:2px}
+.chip.on{background:#e9f9f2;border-color:#7fd3b0;color:#0d6f50}
+.concept{margin-top:12px;background:#f6fafd;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.concept .ct{color:var(--c4);margin-bottom:2px}
+.buoy{margin-top:8px;font-size:14.5px;background:#fff7f7;border:1px dashed #f3b5be;border-radius:10px;padding:6px 10px}
+.free{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.readout{background:#f3f9fd;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px}
+.album{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.slot{border:2px dashed #bcd3e3;border-radius:12px;padding:8px;text-align:center;color:var(--muted);min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.slot img,.photo{width:100%;border-radius:8px;display:block}
+.slot.ok{border-style:solid;border-color:#7fd3b0;color:var(--c3)}
+.wcards{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.wcard{border:1px solid #bcd3e3;background:#fff;border-radius:12px;padding:8px 12px;cursor:pointer;text-align:left;line-height:1.5}
+.wcard.sel{border-color:var(--c2);box-shadow:0 0 0 3px #ffe0c7}
+.sboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:600px){.sboxes{grid-template-columns:1fr}}
+.sbox{border:2px dashed #bcd3e3;border-radius:12px;padding:8px;min-height:110px;cursor:pointer;background:#fbfdff}
+.sbox:hover{border-color:var(--c1)}
+.sbt{font-size:17px}.sbc{font-size:13px;color:var(--muted);margin-bottom:4px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+@media(max-width:600px){.gauges{grid-template-columns:repeat(2,1fr)}}
+.gg{background:#f3f9fd;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.gg .gl{font-size:13px;color:var(--muted)}
+.gg .gv{font-size:18px}
+.gg .gb{height:6px;background:#dbe9f3;border-radius:6px;overflow:hidden}
+.gg .gb i{display:block;height:100%;border-radius:6px}
+table.tb{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+table.tb th,table.tb td{border:1px solid var(--line);padding:5px 6px;text-align:center}
+table.tb th{background:#eef5fa;color:var(--deep2)}
+.pbar{height:10px;background:#dbe9f3;border-radius:8px;overflow:hidden;margin:4px 0}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,#1d8fc4,#11c08a);width:0;transition:width .2s}
+.ord{display:flex;flex-wrap:wrap;gap:8px}
+.ordseq{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.ordseq div{background:#ecfaf4;border:1px solid #a6e3c9;color:#0d6f50;border-radius:10px;padding:6px 10px}
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}
+.road .rc{border:1px solid var(--line);border-radius:14px;padding:12px;background:linear-gradient(180deg,#fff,#f3f9fd)}
+.road .rn{font-size:13px;color:var(--c2)}
+.road .rt{font-size:17px;color:var(--deep2)}
+.qblock{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#fff}
+.qnum{color:var(--c2);font-size:14px}
+.qtext{font-size:16.5px;margin:2px 0 6px}
+.res-hero{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.medal{width:120px;height:120px;border-radius:50%;border:8px solid;display:flex;align-items:center;justify-content:center;font-size:64px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.srow{display:grid;grid-template-columns:170px 1fr 80px;gap:10px;align-items:center;margin:6px 0;font-size:15px}
+.srow .bar{height:12px;background:#e1edf5;border-radius:8px;overflow:hidden}
+.srow .bar i{display:block;height:100%;border-radius:8px}
+.answer{background:#f7fbfe;border:1px solid var(--line);border-radius:10px;padding:10px 12px;white-space:pre-wrap;margin:4px 0 12px}
+.fbpara{margin:0 0 10px;text-indent:0}
+.weak{border:1px solid #ffd09a;background:#fffaf3;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.gradetbl td,.gradetbl th{padding:4px 8px}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:20px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="ttl">🌊 파도 마스터: <span class="y">물 입자 운동 · 심해파 · 전이파 · 천해파</span></div>
+    <div class="subt">파도가 지나갈 때 바닷물은 어떻게 움직일까? | 고등학교 2학년 지구시스템과학</div>
+  </div>
+  <div class="brand">
+    <img id="logoImg" src="data:image/png;base64,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" alt="EARTH LJY 로고" style="width:58px;height:58px;background:#fff;border-radius:12px;padding:2px">
+    <div><div class="bn">EARTH <span>LJY</span></div><div class="bm">earthljy@ai.jne.kr</div></div>
+  </div>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<div class="prog"><div id="progbar"></div></div>
+
+<main>
+<!-- ============ 0. 출항 준비 ============ -->
+<section class="panel show" id="tab0">
+  <div class="card">
+    <h2 class="st">⚓ 출항 준비 — 바닷속 물 입자 탐사대</h2>
+    <div class="npc"><div class="av">🧭</div><div class="bub"><div class="who">한바다 선장</div>
+      파도가 밀려오면 바닷물도 함께 해안으로 밀려갈까? 이번 항해에서는 <span class="c2">바다 위 오리 인형</span>으로 물 입자의 움직임을 관찰하고,
+      <span class="c6">해저 탐사 로봇</span>과 함께 바다의 깊이에 따라 파도가 <span class="c1">심해파</span>, <span class="c3">전이파</span>, <span class="c2">천해파</span>로 나뉘는 까닭을 밝혀내게!
+      미션 중 시행착오와 힌트 사용은 모두 <span class="c4">수행 과정 기록</span>으로 남으니, 차분히 관찰하고 생각한 뒤 답하게!</div></div>
+  </div>
+  <div class="card">
+    <h3>🎯 학습 목표</h3>
+    <p>해파가 진행할 때 <span class="c2">물 입자는 제자리에서 원운동</span>을 하며 <span class="c1">에너지와 파의 모양만 전달</span>됨을 설명하고,
+    수심과 파장의 관계에 따라 해파를 <span class="c1">심해파</span>·<span class="c3">전이파</span>·<span class="c2">천해파</span>로 분류하며 각 해파의 물 입자 운동 특징을 비교할 수 있다.</p>
+    <div class="road">
+      <div class="rc"><div class="rn">MISSION 1</div><div class="rt">🦆 바다 위 오리 인형</div><div class="small muted">물 입자의 운동과 해파의 전파</div></div>
+      <div class="rc"><div class="rn">MISSION 2</div><div class="rt">🤖 해저 탐사 로봇</div><div class="small muted">심해파·전이파·천해파 분류</div></div>
+      <div class="rc"><div class="rn">FINAL</div><div class="rt">📝 최종 점검 → 🏆</div><div class="small muted">퀴즈·서술형, A~F 평가</div></div>
+    </div>
+    <div class="concept" style="margin-top:12px"><div class="ct">🗺 탐사 흐름</div>
+      수면의 오리 인형: <span class="c2">원운동</span>, 제자리로 돌아옴 → 바닷속 물 입자: <span class="c2">깊을수록 원이 작아짐</span> → 수심이 얕아지면 해저의 영향으로 <span class="c2">타원 운동</span> → 수심 ÷ 파장으로 <span class="c1">심해파</span>·<span class="c3">전이파</span>·<span class="c2">천해파</span> 분류</div>
+  </div>
+  <div class="card">
+    <h3>🪪 승선 명단 작성</h3>
+    <div class="row">학번 <input type="text" id="in_sid" placeholder="예) 20315" style="width:140px"> 이름 <input type="text" id="in_name" placeholder="이름" style="width:160px"></div>
+    <p class="small muted">입력한 정보는 미션 성공 탭과 결과 이미지에 표시됩니다. (이 화면 안에서만 사용되며 어디에도 전송되지 않아요.)</p>
+    <p class="small">평가 방식: 2개 미션 각 <span class="c2">25점</span>(오류 1회 −2점, 힌트 1회 −1점) + 객관식 <span class="c2">30점</span> + 서술형 <span class="c2">20점</span> = 100점 → <span class="c3">A</span>(90↑) · <span class="c1">B</span>(80↑) · <span class="c6">C</span>(70↑) · <span class="c2">D</span>(60↑) · <span class="c5">F</span></p>
+    <button class="btn o" id="startBtn">⛵ 출항하기 (1단계 시작)</button>
+  </div>
+</section>
+
+<section class="panel" id="tab1">
+  <div id="ban1" class="banner hidden">🔁 보충 시뮬레이션 진행 중 — 이번 수행 점수가 기존보다 높으면 결과에 반영돼요.</div>
+  <h2 class="st">1단계 · 바다 위 오리 인형 <span class="c6">— 물 입자의 운동과 해파의 전파</span></h2>
+  <div class="npc"><div class="av">🧭</div><div class="bub"><div class="who">한바다 선장</div>
+    파도가 밀려오면 바다 위 오리 인형도 함께 떠내려갈까? <span class="c2">파도 발생 장치</span>를 켜고 <span class="c1">잔상 모드</span>로 오리 인형의 이동 경로를 관찰하게.
+    <span class="c3">물 입자 보기</span>로 바닷속 입자들의 움직임도 확인해 보자!</div></div>
+  <div class="grid2">
+    <div class="card">
+      <canvas id="cv4" width="900" height="380"></canvas>
+      <div class="ctrl"><button class="btn" id="s4on">🌀 파도 발생 장치 켜기</button><button class="btn ghost" id="s4trail">👣 잔상 모드: 꺼짐</button><button class="btn ghost" id="s4parts">💧 물 입자 보기: 꺼짐</button><button class="btn ghost" id="s4clear">🧹 잔상 지우기</button></div>
+      <div style="margin-top:8px" class="small">잔상 관찰 진행도 (2주기 이상) <div class="pbar"><i id="s4prog"></i></div></div>
+    </div>
+    <div class="card">
+      <h3>📋 미션 체크리스트</h3>
+      <ul class="tasks" id="s4tasks"></ul>
+      <div class="work" id="s4work"></div>
+      <div class="fb" id="s4fb"></div>
+      <div class="concept"><div class="ct">📘 용어 노트</div>
+        <span class="c2">물 입자의 운동</span>: 파도가 진행해도 바닷물은 앞으로 밀려 나가지 않고 제자리 근처에서 주기적인 <span class="c2">원운동(또는 타원 운동)</span>을 해요.<br>
+        <span class="c1">해파의 전파</span>: 바닷물이 직접 이동하는 것이 아니라 <span class="c1">에너지와 파의 모양</span>만 전달되는 현상이에요.</div>
+    </div>
+  </div>
+  <div class="done-box" id="done1"></div>
+</section>
+
+<!-- ============ 5단계 ============ -->
+
+<section class="panel" id="tab2">
+  <div id="ban2" class="banner hidden">🔁 보충 시뮬레이션 진행 중 — 이번 수행 점수가 기존보다 높으면 결과에 반영돼요.</div>
+  <h2 class="st">2단계 · 해저 탐사 로봇 <span class="c6">— 심해파·전이파·천해파 분류</span></h2>
+  <div class="npc"><div class="av">🤖</div><div class="bub"><div class="who">탐사 로봇 웨이비</div>
+    삐빅! 1단계에서 관찰한 물 입자의 <span class="c2">원운동</span>이 바다의 깊이에 따라 어떻게 달라지는지 조사합니다. 수심과 파장을 바꿔 가며 <span class="c1">수심 ÷ 파장</span> 비율을 측정합니다. 해저가 <span class="c2">물 입자의 원운동</span>에 영향을 주는지도 관찰해 주세요.
+    세 종류의 해파(<span class="c1">심해파</span>, <span class="c3">전이파</span>, <span class="c2">천해파</span>)를 모두 발견하면 분류 상자가 열립니다.</div></div>
+  <div class="grid2">
+    <div class="card">
+      <canvas id="cv3" width="900" height="330"></canvas>
+      <div class="slider"><span>🌊 수심 d</span><input type="range" id="s3d" min="1" max="300" step="1"><span class="v" id="s3dv"></span></div>
+      <div class="slider"><span>〰 파장 L</span><input type="range" id="s3L" min="10" max="300" step="5"><span class="v" id="s3Lv"></span></div>
+      <div class="readout" id="s3read"></div>
+      <div style="margin-top:6px">발견한 해파: <span id="s3seen"></span></div>
+    </div>
+    <div class="card">
+      <h3>📋 미션 체크리스트</h3>
+      <ul class="tasks" id="s3tasks"></ul>
+      <div id="s3lock" class="work"><p>🔒 왼쪽 슬라이더로 수심과 파장을 바꿔 <span class="c2">세 종류의 해파</span>를 모두 찾아 주세요.</p></div>
+      <div id="s3sort" class="work hidden">
+        <p>🗂 카드를 먼저 클릭한 뒤, 알맞은 <span class="c2">파도 상자</span>를 클릭하세요.</p>
+        <div class="wcards" id="s3cards"></div>
+        <div class="sboxes" id="s3boxes"></div>
+      </div>
+      <div id="s3quiz" class="work hidden"></div>
+      <div class="fb" id="s3fb"></div>
+      <div class="concept"><div class="ct">📘 분류 기준</div>
+        <span class="c1">심해파</span>: 수심 &gt; 파장의 1/2 · <span class="c2">천해파</span>: 수심 &lt; 파장의 1/20 · <span class="c3">전이파</span>: 그 사이</div>
+    </div>
+  </div>
+  <div class="done-box" id="done2"></div>
+</section>
+
+<!-- ============ 4단계 ============ -->
+
+<section class="panel" id="tab3"><div id="evalWrap"></div></section>
+<section class="panel" id="tab4"><div id="resWrap"></div></section>
+</main>
+<footer>파도 마스터: 물 입자 운동과 해파의 분류 · EARTH LJY · earthljy@ai.jne.kr</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 공통 ================= */
+const FONT="'a시네마','a시네마L','a시네마M','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif";
+const F=px=>px+"px "+FONT;
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=s=>s*s*(3-2*s);
+const TAU=Math.PI*2;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function toast(m){const t=$('#toast');t.innerHTML=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function fb(el,type,html){el.className='fb show '+type;el.innerHTML=html;}
+function fbClear(el){el.className='fb';el.innerHTML='';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function li(t,st){return `<li class="${st===2?'ok':st===1?'now':''}">${st===2?'✅':st===1?'👉':'⬜'} <span>${t}</span></li>`;}
+function taskList(el,tasks,flags){let nowSet=false;el.innerHTML=tasks.map((t,i)=>{let st=flags[i]?2:0;if(!flags[i]&&!nowSet){st=1;nowSet=true;}return li(t,st);}).join('');}
+
+const NST=2,STMAX=25,EVAL_TAB=3,RES_TAB=4;
+const TAB_NAMES=['⚓ 출항 준비','1 오리 인형','2 해저 탐사','📝 최종 점검','🏆 미션 성공'];
+const STAGE_TITLE={1:'바다 위 오리 인형(물 입자 운동과 해파의 전파)',2:'해저 탐사 로봇(심해파·전이파·천해파)'};
+const STAGE_SHORT={1:'오리 인형',2:'해저 탐사 로봇'};
+const S={name:'',sid:'',unlocked:0,cur:0,start:Date.now(),st:{},mc:{},es:{},evalDone:false,remedial:null};
+for(let n=1;n<=NST;n++)S.st[n]={done:false,errors:0,hints:0,best:-1,last:0,runs:0,detail:{},bestDetail:null};
+function addErr(n,key){S.st[n].errors++;S.st[n].detail[key]=(S.st[n].detail[key]||0)+1;}
+function addHint(n){S.st[n].hints++;}
+function stageScore(n){const s=S.st[n];return Math.max(8,STMAX-2*s.errors-s.hints);}
+function bindHint(n,btn,html,fbEl){if(!btn)return;btn.onclick=()=>{addHint(n);fb(fbEl,'info','💡 '+html);};}
+function hintBtn(id){return `<button class="btn ghost" id="${id}">💡 힌트 (−1점)</button>`;}
+
+function buildTabs(){const nav=$('#tabs');nav.innerHTML='';TAB_NAMES.forEach((nm,i)=>{const b=document.createElement('button');b.className='tab';b.dataset.i=i;b.onclick=()=>showTab(i);nav.appendChild(b);});refreshTabs();}
+function refreshTabs(){
+  $$('.tab').forEach(b=>{const i=+b.dataset.i;const locked=i>S.unlocked;const done=(i>=1&&i<=NST&&S.st[i].done)||(i===EVAL_TAB&&S.evalDone);
+    b.classList.toggle('locked',locked);b.classList.toggle('done',done);b.classList.toggle('active',i===S.cur);
+    b.textContent=(locked?'🔒 ':done?'✔ ':'')+TAB_NAMES[i];});
+  let dc=S.evalDone?1:0;for(let n=1;n<=NST;n++)if(S.st[n].done)dc++;$('#progbar').style.width=(dc/(NST+1)*100)+'%';
+}
+function showTab(i){
+  if(i>S.unlocked){toast('🔒 이전 미션을 먼저 완료해야 열려요!');return;}
+  S.cur=i;$$('.panel').forEach(p=>p.classList.remove('show'));$('#tab'+i).classList.add('show');refreshTabs();
+  if(i===EVAL_TAB)renderEval();if(i===RES_TAB)renderResult();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+const DONE_MSG={
+ 1:'파도가 지나가도 물 입자는 제자리에서 <span class="c2">원운동</span>을 할 뿐, 멀리 전달되는 것은 <span class="c1">에너지와 파의 모양</span>이에요. 이제 바다의 깊이에 따라 이 원운동이 어떻게 달라지는지 탐사해 봅시다!',
+ 2:'수심이 <span class="c1">파장의 1/2보다 깊으면 심해파</span>(원운동, 해저 영향 없음), <span class="c2">1/20보다 얕으면 천해파</span>(납작한 타원 운동), 그 사이는 <span class="c3">전이파</span>예요.'};
+function completeStage(n){
+  const s=S.st[n];const sc=stageScore(n);s.last=sc;s.runs++;s.done=true;
+  if(sc>s.best){s.best=sc;s.bestDetail={errors:s.errors,hints:s.hints,detail:Object.assign({},s.detail)};}
+  if(S.unlocked<n+1)S.unlocked=n+1;
+  const rem=S.remedial&&S.remedial.type==='stage'&&S.remedial.n===n;
+  if(rem){S.remedial=null;$('#ban'+n).classList.add('hidden');}
+  refreshTabs();
+  const box=$('#done'+n);
+  box.innerHTML=`<h3>🎉 ${n}단계 미션 완료!</h3>
+   <p>이번 수행 점수 <span class="c2">${sc} / ${STMAX}</span> · 오류 <span class="c5">${s.errors}회</span> · 힌트 <span class="c4">${s.hints}회</span>${s.runs>1?` · 최고 기록 <span class="c3">${s.best} / ${STMAX}</span>`:''}</p>
+   <p>${DONE_MSG[n]}</p>
+   <div class="ctrl">${(rem||S.evalDone)?`<button class="btn o" onclick="showTab(${RES_TAB})">📊 미션 결과로 돌아가기</button>`:''}
+   ${n<NST?`<button class="btn g" onclick="showTab(${n+1})">다음 미션: ${n+1}단계 ▶</button>`:(S.evalDone?'':`<button class="btn g" onclick="showTab(${EVAL_TAB})">📝 최종 점검 풀기 ▶</button>`)}</div>`;
+  box.classList.add('show');setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'center'}),150);
+}
+function drawShip(c,x,y,ang,s){s=s||1;c.save();c.translate(x,y);c.rotate(ang);c.scale(s,s);
+  c.fillStyle='#8a4b2a';c.beginPath();c.moveTo(-34,-6);c.lineTo(34,-6);c.lineTo(24,10);c.lineTo(-24,10);c.closePath();c.fill();
+  c.fillStyle='#f3efe6';c.fillRect(-16,-20,22,14);c.fillStyle='#7fc3ea';c.fillRect(-12,-17,6,6);c.fillRect(-3,-17,6,6);
+  c.strokeStyle='#5a3a22';c.lineWidth=2.4;c.beginPath();c.moveTo(10,-6);c.lineTo(10,-50);c.stroke();
+  c.fillStyle='#ffffff';c.beginPath();c.moveTo(12,-48);c.lineTo(34,-14);c.lineTo(12,-14);c.closePath();c.fill();
+  c.fillStyle='#e2631f';c.beginPath();c.moveTo(10,-50);c.lineTo(-6,-45);c.lineTo(10,-40);c.closePath();c.fill();
+  c.restore();}
+
+/* 보조 함수 */
+function fmt(v){return (+v.toFixed(1)).toString();}
+function arrowH(c,x1,x2,y){c.beginPath();c.moveTo(x1,y);c.lineTo(x2,y);c.stroke();c.beginPath();c.moveTo(x1,y);c.lineTo(x1+8,y-5);c.lineTo(x1+8,y+5);c.closePath();c.fill();c.beginPath();c.moveTo(x2,y);c.lineTo(x2-8,y-5);c.lineTo(x2-8,y+5);c.closePath();c.fill();}
+/* ================= 1단계(오리 인형) ================= */
+const S4={Lw:300,A:30,T:3,SL:140,DX:450,
+ Q:[{q:'잔상 모드에서 오리 인형이 그린 경로의 모양은?',o:['파도를 따라 앞으로 쭉 나아가는 직선','제자리 근처에서 그리는 원 모양','전혀 움직이지 않는 한 점'],a:1,
+     fb:['잔상을 다시 보세요. 오리 인형이 <span class="c2">출발 위치(점선)</span>에서 멀리 떠나갔나요?',null,'오리 인형은 분명 움직이고 있어요. 위아래·앞뒤로 어떤 <span class="c2">모양</span>을 그리나요?']},
+    {q:'파도(마루)가 계속 오른쪽으로 지나갈 때, 오리 인형은 어떻게 되었나요?',o:['파도와 함께 오른쪽 해안 쪽으로 떠내려갔다','한 바퀴 돌고 나면 처음 위치 근처로 되돌아왔다'],a:1,
+     fb:['<span class="c2">출발 위치 점선</span>과 오리 인형의 위치를 비교해 보세요. 점점 멀어지나요?',null]},
+    {q:'깊이 내려갈수록 물 입자의 원운동 크기는 어떻게 변하나요?',o:['점점 커진다','변화가 없다','점점 작아진다'],a:2,need:true,
+     fb:['깊은 곳 입자의 원과 표면 입자의 원 크기를 <span class="c3">물 입자 보기</span>로 다시 비교해 보세요.','깊은 곳 입자의 원이 표면과 정말 <span class="c2">같은 크기</span>인지 다시 보세요.',null]},
+    {q:'이 실험에서 해파가 실제로 멀리 전달하는 것은 무엇인가요?',o:['바닷물 자체','에너지와 파의 모양','오리 인형'],a:1,
+     fb:['바닷물이 앞으로 이동했다면 그 위의 오리 인형도 함께 <span class="c2">떠내려갔겠죠?</span>',null,'오리 인형은 <span class="c2">제자리 근처</span>에 머물렀어요. 계속 앞으로 나아간 것은 무엇이었나요? (깃발 표시)']}],
+ init(){this.cv=$('#cv4');this.ctx=this.cv.getContext('2d');
+  $('#s4on').onclick=()=>{this.on=!this.on;if(this.on)this.everOn=true;this.btns();};
+  $('#s4trail').onclick=()=>{this.trail=!this.trail;this.btns();};
+  $('#s4parts').onclick=()=>{this.parts=!this.parts;this.btns();};
+  $('#s4clear').onclick=()=>{this.pts=[];};this.reset();},
+ reset(){this.t=0;this.amp=0;this.on=false;this.everOn=false;this.trail=false;this.parts=false;this.pts=[];this.obs=0;this.pobs=0;this.ans={};this.key='';fbClear($('#s4fb'));this.btns();this.render();},
+ btns(){$('#s4on').textContent=this.on?'⏹ 파도 발생 장치 끄기':'🌀 파도 발생 장치 켜기';$('#s4on').classList.toggle('on',this.on);
+  $('#s4trail').textContent='👣 잔상 모드: '+(this.trail?'켜짐':'꺼짐');$('#s4trail').className='btn '+(this.trail?'g':'ghost');
+  $('#s4parts').textContent='💧 물 입자 보기: '+(this.parts?'켜짐':'꺼짐');$('#s4parts').className='btn '+(this.parts?'g':'ghost');},
+ pos(x0,z0){const k=TAU/this.Lw,w=TAU/this.T,th=k*x0-w*this.t,r=this.A*this.amp*Math.exp(-k*z0);return [x0-r*Math.sin(th),this.SL+z0-r*Math.cos(th),r];},
+ frame(dt){this.t+=dt;this.amp=clamp(this.amp+(this.on?dt:-dt)/1.2,0,1);
+  if(this.on&&this.amp>0.9){if(this.trail)this.obs+=dt;if(this.parts)this.pobs+=dt;}
+  if(this.trail&&this.amp>0.05){const p=this.pos(this.DX,0);this.pts.push(p);if(this.pts.length>420)this.pts.shift();}
+  $('#s4prog').style.width=clamp(this.obs/(2*this.T)*100,0,100)+'%';
+  const key=[this.everOn,this.obs>=2*this.T,this.pobs>=2].join('|');if(key!==this.key){this.key=key;this.render();}
+  this.draw();},
+ draw(){const c=this.ctx,W=900,H=380,SL=this.SL;
+  let g=c.createLinearGradient(0,0,0,SL);g.addColorStop(0,'#eef8ff');g.addColorStop(1,'#d3ecfa');c.fillStyle=g;c.fillRect(0,0,W,H);
+  const surf=[];for(let x0=-60;x0<=960;x0+=5)surf.push(this.pos(x0,0));
+  c.beginPath();c.moveTo(-60,H);surf.forEach(p=>c.lineTo(p[0],p[1]));c.lineTo(960,H);c.closePath();
+  g=c.createLinearGradient(0,SL-30,0,H);g.addColorStop(0,'#55aee4');g.addColorStop(1,'#0c3c63');c.fillStyle=g;c.fill();
+  c.beginPath();surf.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.strokeStyle='#0a4775';c.lineWidth=2.4;c.stroke();
+  if(this.parts){const zs=[35,75,120,175,235];c.font=F(12);c.fillStyle='rgba(255,255,255,.8)';c.textAlign='left';
+   zs.forEach(z=>c.fillText('깊이 '+Math.round(z/10)+' m',6,SL+z+4));
+   for(let x0=90;x0<=870;x0+=60){zs.forEach(z=>{const p=this.pos(x0,z),hl=x0===450;
+     c.strokeStyle=hl?'rgba(255,210,63,.6)':'rgba(255,255,255,.28)';c.lineWidth=1;c.beginPath();c.arc(x0,SL+z,Math.max(p[2],0.5),0,TAU);c.stroke();
+     c.fillStyle=hl?'#ffd23f':'rgba(255,255,255,.85)';c.beginPath();c.arc(p[0],p[1],hl?4:3,0,TAU);c.fill();});}}
+  c.setLineDash([6,5]);c.strokeStyle='rgba(226,99,31,.8)';c.lineWidth=1.6;c.beginPath();c.moveTo(this.DX,30);c.lineTo(this.DX,SL+60);c.stroke();c.setLineDash([]);
+  c.fillStyle='#e2631f';c.font=F(13);c.textAlign='center';c.fillText('오리의 처음 위치',this.DX,24);
+  if(this.pts.length>1){c.strokeStyle='rgba(226,99,31,.9)';c.lineWidth=2.4;c.beginPath();this.pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]-14):c.moveTo(p[0],p[1]-14));c.stroke();
+   c.fillStyle='rgba(226,99,31,.55)';for(let i=0;i<this.pts.length;i+=14){c.beginPath();c.arc(this.pts[i][0],this.pts[i][1]-14,2.6,0,TAU);c.fill();}}
+  if(this.amp>0.2){const k=TAU/this.Lw,w=TAU/this.T;const xc=(((w*this.t)/k)%900+900)%900;const p=this.pos(xc,0);
+   c.fillStyle='#8a3dd0';c.strokeStyle='#8a3dd0';c.lineWidth=2;c.beginPath();c.moveTo(p[0],p[1]-8);c.lineTo(p[0],p[1]-46);c.stroke();
+   c.beginPath();c.moveTo(p[0],p[1]-46);c.lineTo(p[0]+26,p[1]-39);c.lineTo(p[0],p[1]-32);c.closePath();c.fill();
+   c.font=F(13);c.textAlign='left';c.fillText('파의 모양·에너지 →',p[0]+6,p[1]-52);}
+  const d=this.pos(this.DX,0),d2=this.pos(this.DX+6,0),ang=Math.atan2(d2[1]-d[1],d2[0]-d[0]);drawDuck(c,d[0],d[1],ang);
+  c.fillStyle='rgba(255,255,255,.9)';c.font=F(13);c.textAlign='right';c.fillText('파도 진행 방향 → (해안 쪽)',W-12,H-12);},
+ render(){taskList($('#s4tasks'),['파도 발생 장치 켜기','잔상 모드로 오리 경로 2주기 이상 관찰','물 입자 보기로 깊이별 운동 관찰','관찰 결과 해석 문제 4개 해결'],[this.everOn,this.obs>=2*this.T,this.pobs>=2,Object.keys(this.ans).length===4]);
+  const w=$('#s4work'),f=$('#s4fb');
+  if(this.obs<2*this.T){w.innerHTML=`<p>🦆 <span class="c2">파도 발생 장치</span>와 <span class="c1">잔상 모드</span>를 모두 켜고 오리 인형이 그리는 경로를 <span class="c2">2주기 이상</span> 관찰하세요.</p><p class="small muted">보라색 깃발은 파의 마루(모양)가 이동하는 모습을 따라가요. 오리 인형과 비교해 보세요!</p>`;return;}
+  w.innerHTML=this.Q.map((q,i)=>{const lock=q.need&&this.pobs<2,done=this.ans[i];
+   return `<div class="qblock"><div class="qnum">관찰 해석 ${i+1}</div><div class="qtext">${q.q}</div>${lock?'<p class="c4 small">🔒 <span class="c3">물 입자 보기</span>를 켜고 잠시 관찰하면 풀 수 있어요.</p>':q.o.map((o,j)=>`<button class="opt ${done&&j===q.a?'right':''}" data-q="${i}" data-j="${j}" ${done?'disabled':''}>${j+1}. ${o}</button>`).join('')}</div>`;}).join('');
+  $$('.opt',w).forEach(b=>b.onclick=()=>{const i=+b.dataset.q,j=+b.dataset.j,q=this.Q[i];if(this.ans[i])return;
+   if(j===q.a){this.ans[i]=true;fb(f,'ok',['맞아요! 오리 인형은 제자리 근처에서 <span class="c2">원 모양</span>으로 움직여요.','맞아요! 한 바퀴 돌고 나면 <span class="c2">처음 위치 근처</span>로 돌아와요.','맞아요! 깊어질수록 물 입자의 <span class="c3">원운동 크기가 작아져요</span>.','맞아요! 해파는 바닷물이 아니라 <span class="c1">에너지와 파의 모양</span>을 전달해요.'][i]);
+    this.render();if(Object.keys(this.ans).length===4)completeStage(1);}
+   else{addErr(1,'q'+(i+1));b.classList.add('wrong','shake');fb(f,'no',q.fb[j]);}});}
+};
+function drawDuck(c,x,y,ang){c.save();c.translate(x,y);c.rotate(ang);
+  c.fillStyle='#ffd23f';c.beginPath();c.ellipse(0,-7,21,12,0,0,TAU);c.fill();c.beginPath();c.arc(13,-22,9.5,0,TAU);c.fill();
+  c.fillStyle='#ff8c1a';c.beginPath();c.moveTo(21,-23);c.lineTo(31,-20);c.lineTo(21,-17);c.closePath();c.fill();
+  c.fillStyle='#2b2b2b';c.beginPath();c.arc(15,-24,1.9,0,TAU);c.fill();
+  c.fillStyle='#f2b705';c.beginPath();c.ellipse(-5,-8,10,5,-0.3,0,TAU);c.fill();c.restore();}
+
+/* ================= 2단계(해저 탐사) ================= */
+const COL3={'심해파':'var(--c1)','전이파':'var(--c3)','천해파':'var(--c2)'};
+const HEX3={'심해파':'#1a6fd6','전이파':'#0f9168','천해파':'#e2631f'};
+const S3={CARDS:[{d:200,L:100},{d:2,L:100},{d:20,L:100},{d:60,L:80},{d:1,L:40},{d:10,L:50}],
+ cls(d,L){return d>L/2?'심해파':d<L/20?'천해파':'전이파';},
+ init(){this.cv=$('#cv3');this.ctx=this.cv.getContext('2d');this.t=0;
+  $('#s3d').oninput=()=>this.upd();$('#s3L').oninput=()=>this.upd();this.reset();},
+ reset(){this.seen=new Set();this.sel=null;this.sorted={};this.cards=shuffle(this.CARDS.map((c,i)=>Object.assign({i},c)));this.unlocked=false;this.qans={};this.qdone=false;this.inQuiz=false;$('#s3quiz').classList.add('hidden');$('#s3quiz').innerHTML='';
+  $('#s3d').value=100;$('#s3L').value=100;$('#s3sort').classList.add('hidden');$('#s3lock').classList.remove('hidden');fbClear($('#s3fb'));this.quiet=true;this.upd();this.quiet=false;this.render();},
+ upd(){this.d=+$('#s3d').value;this.L=+$('#s3L').value;const k=this.cls(this.d,this.L);
+  $('#s3dv').textContent=this.d+' m';$('#s3Lv').textContent=this.L+' m';
+  $('#s3read').innerHTML=`파장의 1/2 = <span class="c1">${fmt(this.L/2)} m</span> · 파장의 1/20 = <span class="c2">${fmt(this.L/20)} m</span> · 수심 ÷ 파장 = <span class="c4">${(this.d/this.L).toFixed(3)}</span><br>판정: 수심 ${this.d} m ${k==='심해파'?'&gt; 파장의 1/2':k==='천해파'?'&lt; 파장의 1/20':'는 두 기준 사이'} → <span style="color:${COL3[k]}">${k}</span>`;
+  if(!this.seen.has(k)){this.seen.add(k);if(this.seen.size<3&&!this.quiet)toast(`🔎 새로운 해파 발견: <span style="color:${HEX3[k]}">${k}</span> (${this.seen.size}/3)`);}
+  if(this.seen.size===3&&!this.unlocked){this.unlocked=true;$('#s3lock').classList.add('hidden');$('#s3sort').classList.remove('hidden');toast('🎉 세 종류 모두 발견! 분류 상자가 열렸어요.');this.render();}
+  $('#s3seen').innerHTML=['심해파','전이파','천해파'].map(n=>`<span class="chip ${this.seen.has(n)?'on':''}">${this.seen.has(n)?'✔ '+n:'❔ ???'}</span>`).join('');
+  taskList($('#s3tasks'),['심해파 조건 찾기','전이파 조건 찾기','천해파 조건 찾기','해파 카드 6장 분류하기','수심에 따른 물 입자 운동 해석하기'],[this.seen.has('심해파'),this.seen.has('전이파'),this.seen.has('천해파'),Object.keys(this.sorted).length===6,!!this.qdone]);},
+ frame(dt){this.t+=dt;this.draw();},
+ draw(){const c=this.ctx,W=900,H=330,top=70,bot=300,L=this.L,d=this.d,k=this.cls(d,L);
+  const Dmax=d*1.3,vy=(bot-top)/Dmax,lamPx=W/2.5;
+  c.fillStyle='#eaf7ff';c.fillRect(0,0,W,H);
+  const sy=x=>top-8*Math.cos(TAU*(x/lamPx-this.t/2.2));
+  c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=3)c.lineTo(x,sy(x));c.lineTo(W,H);c.closePath();
+  const g=c.createLinearGradient(0,top,0,H);g.addColorStop(0,'#62b5e7');g.addColorStop(1,'#0d3f66');c.fillStyle=g;c.fill();
+  c.beginPath();for(let x=0;x<=W;x+=3){x===0?c.moveTo(x,sy(x)):c.lineTo(x,sy(x));}c.strokeStyle='#0a4775';c.lineWidth=2.2;c.stroke();
+  const fy=top+d*vy;c.fillStyle='#d8bd84';c.fillRect(0,fy,W,H-fy);c.fillStyle='#c6a86a';for(let x=0;x<W;x+=26){c.beginPath();c.ellipse(x+10,fy+6,9,2.4,0,0,TAU);c.fill();}
+  c.font=F(13);
+  [[L/2,'파장의 1/2','#1a6fd6'],[L/20,'파장의 1/20','#e2631f']].forEach(([z,lb,col])=>{
+   if(z<=Dmax){const y=top+z*vy;c.setLineDash([7,5]);c.strokeStyle=col;c.lineWidth=1.6;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);
+    c.fillStyle='rgba(255,255,255,.88)';const tx=`${lb} 깊이 (${fmt(z)} m)`;const tw=c.measureText(tx).width;c.fillRect(8,y-18,tw+10,17);c.fillStyle=col;c.textAlign='left';c.fillText(tx,13,y-5);}
+   else{c.fillStyle='rgba(255,255,255,.88)';const tx=`↓ ${lb} 깊이(${fmt(z)} m)는 해저보다 깊음`;const tw=c.measureText(tx).width;c.fillRect(W-tw-18,fy+8,tw+10,18);c.fillStyle=col;c.textAlign='left';c.fillText(tx,W-tw-13,fy+22);}});
+  // 파장 화살표
+  c.strokeStyle='#4b2a8a';c.fillStyle='#4b2a8a';c.lineWidth=1.6;arrowH(c,lamPx*0.5,lamPx*1.5,top-30);c.font=F(14);c.textAlign='center';c.fillText('파장 L = '+L+' m',lamPx,top-37);
+  // 수심 화살표
+  c.strokeStyle='#ffffff';c.fillStyle='#ffffff';arrowVsimple(c,W-30,top+4,fy-2);c.textAlign='right';{const ly=Math.min(Math.max((top+fy)/2,top+98),fy+16);c.fillStyle=ly>fy?'#6b4f1d':'#ffffff';c.fillText('수심 d = '+d+' m',W-40,ly);}
+  // 궤도
+  const kk=TAU/L,kd=kk*d,sh=Math.sinh(Math.min(kd,40)),R=15;
+  [170,440].forEach(x0=>{[0.06,0.24,0.44,0.64,0.84].forEach(fr=>{const z=fr*d;let A,B;
+    if(kd>18){A=B=Math.exp(-kk*z);}else{A=Math.cosh(kk*(d-z))/sh;B=Math.sinh(kk*(d-z))/sh;}
+    const a=Math.min(R*A,70),b=R*B,cy=top+z*vy,th=kk*x0*0-TAU*this.t/2.2+x0;
+    if(a<0.6&&b<0.6){c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.arc(x0,cy,1.6,0,TAU);c.fill();return;}
+    c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1.2;c.beginPath();c.ellipse(x0,cy,Math.max(a,0.5),Math.max(b,0.5),0,0,TAU);c.stroke();
+    c.fillStyle='#ffd23f';c.beginPath();c.arc(x0+a*Math.sin(-th),cy-b*Math.cos(-th),3.6,0,TAU);c.fill();});});
+  c.fillStyle='rgba(255,255,255,.92)';c.fillRect(560,top+14,320,64);c.font=F(14);c.textAlign='left';c.fillStyle='#24394d';
+  c.fillText('🤖 판정',572,top+34);c.font=F(22);c.fillStyle=HEX3[k];c.fillText(k,632,top+36);
+  c.font=F(13);c.fillStyle='#5f7387';c.fillText(k==='심해파'?'물 입자: 원운동, 깊을수록 작아져 해저에 닿지 않음':k==='천해파'?'물 입자: 납작한 타원 운동 (해저 영향 큼)':'물 입자: 타원 운동 (해저 영향 받기 시작)',572,top+62);},
+ render(){if(!this.unlocked)return;const f=$('#s3fb');
+  const left=this.cards.filter(c=>!this.sorted[c.i]);
+  $('#s3cards').innerHTML=left.map(c=>`<button class="wcard ${this.sel===c.i?'sel':''}" data-i="${c.i}">🌊 수심 <span class="c6">${c.d} m</span><br>〰 파장 <span class="c2">${c.L} m</span></button>`).join('')||'<p class="c3">모든 카드를 분류했어요!</p>';
+  $('#s3boxes').innerHTML=['심해파','전이파','천해파'].map(b=>`<div class="sbox" data-b="${b}"><div class="sbt" style="color:${COL3[b]}">📦 ${b}</div><div class="sbc">${b==='심해파'?'수심 &gt; 파장의 1/2':b==='천해파'?'수심 &lt; 파장의 1/20':'두 기준 사이'}</div>${this.cards.filter(c=>this.sorted[c.i]===b).map(c=>`<span class="chip on">${c.d} m / ${c.L} m</span>`).join('')}</div>`).join('');
+  $$('.wcard',$('#s3cards')).forEach(b=>b.onclick=()=>{this.sel=+b.dataset.i;this.render();});
+  $$('.sbox',$('#s3boxes')).forEach(bx=>bx.onclick=()=>{if(this.sel===null){toast('먼저 분류할 카드를 클릭하세요.');return;}
+   const card=this.CARDS[this.sel],ans=this.cls(card.d,card.L),pick=bx.dataset.b;
+   const calc=`수심 ${card.d} m ↔ 파장의 1/2 = ${fmt(card.L/2)} m, 파장의 1/20 = ${fmt(card.L/20)} m`;
+   if(pick===ans){this.sorted[this.sel]=ans;this.sel=null;fb(f,'ok',`정답! ${calc} → <span style="color:${COL3[ans]}">${ans}</span>`);this.render();this.upd();
+    if(Object.keys(this.sorted).length===6){this.quizStart();}}
+   else{addErr(2,'sort');bx.classList.add('shake');setTimeout(()=>bx.classList.remove('shake'),400);
+    fb(f,'no',`<span class="c5">${pick}</span>가 아니에요. ${calc}<br>수심이 두 기준과 비교해 <span class="c2">어느 위치</span>에 있는지 다시 판단해 보세요.`);}});}
+};
+function arrowVsimple(c,x,y1,y2){c.lineWidth=1.6;c.beginPath();c.moveTo(x,y1);c.lineTo(x,y2);c.stroke();c.beginPath();c.moveTo(x,y1);c.lineTo(x-5,y1+8);c.lineTo(x+5,y1+8);c.closePath();c.fill();c.beginPath();c.moveTo(x,y2);c.lineTo(x-5,y2-8);c.lineTo(x+5,y2-8);c.closePath();c.fill();}
+
+
+Object.assign(S3,{
+ QZ:[{q:'수심이 파장의 1/2보다 깊은 <span class="c1">심해파</span>에서 물 입자는 어떻게 운동하나요? (수심을 깊게 하고 관찰해 보세요)',
+      o:['원운동을 하며, 깊어질수록 원이 작아져 해저까지 영향이 미치지 않는다','해저에 부딪혀 납작한 타원 운동을 한다','깊이와 관계없이 모든 물 입자가 같은 크기의 원운동을 한다'],a:0,
+      fb:[null,'납작한 타원은 해저가 가까울 때의 모습이에요. 수심이 깊을 때 해저 근처의 물 입자는 어땠나요?','깊은 곳 입자의 원과 수면 입자의 원 크기를 다시 비교해 보세요.'],
+      ok:'맞아요! 심해파는 물 입자가 <span class="c1">원운동</span>을 하고, 깊어질수록 원이 작아져 <span class="c1">해저의 영향을 받지 않아요</span>.'},
+     {q:'수심이 파장의 1/20보다 얕은 <span class="c2">천해파</span>에서 물 입자는 어떻게 운동하나요? (수심을 아주 얕게 하고 관찰해 보세요)',
+      o:['깊어질수록 원이 커진다','해저의 영향을 받아 납작한 타원 운동을 한다','물 입자가 전혀 움직이지 않는다'],a:1,
+      fb:['깊을수록 원이 커지는 경우는 없어요. 얕은 바다에서 궤도의 모양을 다시 보세요.',null,'얕은 바다에서도 노란 입자는 계속 움직였어요. 그 궤도의 모양을 보세요.'],
+      ok:'맞아요! 천해파는 <span class="c2">해저의 영향</span>을 받아 물 입자가 <span class="c2">납작한 타원 운동</span>을 해요. 전이파는 그 중간 모양이에요.'}],
+ quizStart(){this.inQuiz=true;this.qans={};const z=$('#s3quiz');z.classList.remove('hidden');this.quizRender();
+   fb($('#s3fb'),'ok','카드 분류 완료! 마지막으로 왼쪽 슬라이더로 수심을 바꿔 가며 <span class="c4">물 입자의 궤도 모양</span>을 관찰하고 아래 문제를 풀어 보세요.');
+   setTimeout(()=>z.scrollIntoView({behavior:'smooth',block:'center'}),100);},
+ quizRender(){const z=$('#s3quiz'),f=$('#s3fb');
+  z.innerHTML='<p>🔬 수심에 따른 물 입자 운동 해석</p>'+this.QZ.map((q,i)=>`<div class="qblock"><div class="qnum">관찰 해석 ${i+1}</div><div class="qtext">${q.q}</div>${q.o.map((o,j)=>`<button class="opt ${this.qans[i]&&j===q.a?'right':''}" data-q="${i}" data-j="${j}" ${this.qans[i]?'disabled':''}>${j+1}. ${o}</button>`).join('')}</div>`).join('');
+  $$('.opt',z).forEach(b=>b.onclick=()=>{const i=+b.dataset.q,j=+b.dataset.j,q=this.QZ[i];if(this.qans[i])return;
+   if(j===q.a){this.qans[i]=true;fb(f,'ok',q.ok);this.quizRender();
+    if(Object.keys(this.qans).length===this.QZ.length){this.qdone=true;this.upd();completeStage(2);}}
+   else{addErr(2,'motion');b.classList.add('wrong','shake');fb(f,'no',q.fb[j]);}});}
+});
+
+/* ================= 최종 점검 ================= */
+const MC=[
+ {id:1,stage:1,concept:'해파의 전파',q:'해파가 진행할 때 실제로 멀리까지 전달되는 것은 무엇인가요?',o:['바닷물 자체','에너지와 파의 모양','바다 위에 떠 있는 물체'],a:1,
+  fb:['바닷물이 앞으로 이동한다면 1단계의 오리 인형도 해안까지 <span class="c2">떠내려갔겠죠?</span>',null,'오리 인형은 <span class="c2">제자리 근처</span>로 되돌아왔어요. 계속 앞으로 나아간 것은 무엇이었나요?'],
+  exp:'해파는 바닷물이 이동하는 것이 아니라 <span class="c1">에너지와 파의 모양</span>이 전달되는 현상이에요.',
+  rq:{q:'[보충] 파도가 지나갈 때 바다 위 오리 인형은 어떻게 움직이나요?',o:['파도와 함께 해안 쪽으로 계속 떠내려간다','제자리 근처에서 원을 그리며 움직인다','바다 밑으로 가라앉는다'],a:1,
+   fb:['1단계 잔상 모드에서 오리 인형이 <span class="c2">출발 위치(점선)</span>에서 멀어졌나요?',null,'오리 인형은 계속 물 위에 떠 있었어요. 잔상의 모양을 떠올려 보세요.'],exp:'오리 인형은 물 입자처럼 <span class="c2">제자리 근처에서 원운동</span>을 해요.'}},
+ {id:2,stage:2,concept:'심해파의 기준',q:'수심이 파장의 1/2보다 깊은 곳에서 진행하는 해파를 무엇이라고 하나요?',o:['심해파','전이파','천해파'],a:0,
+  fb:[null,'<span class="c3">전이파</span>는 수심이 파장의 1/20과 1/2 <span class="c2">사이</span>일 때예요.','<span class="c2">천해파</span>는 수심이 파장의 1/20보다 <span class="c2">얕을</span> 때예요. “깊은” 바다의 파도 이름은?'],
+  exp:'수심이 파장의 1/2보다 깊으면 <span class="c1">심해파</span>예요.',
+  rq:{q:'[보충] 수심이 파장의 1/20보다 얕은 곳에서 진행하는 해파는?',o:['심해파','전이파','천해파'],a:2,
+   fb:['<span class="c1">심해파</span>는 수심이 파장의 1/2보다 깊을 때예요.','<span class="c3">전이파</span>는 두 기준 사이일 때예요.',null],exp:'수심이 파장의 1/20보다 얕으면 <span class="c2">천해파</span>예요.'}},
+ {id:3,stage:2,concept:'해파의 분류 적용',q:'파장이 200 m인 해파가 수심 5 m인 해안 근처를 지나고 있습니다. 이 해파의 종류는?',o:['심해파','전이파','천해파'],a:2,
+  fb:['파장의 1/2은 100 m예요. 수심 5 m가 100 m보다 깊나요?','기준값을 계산해 보세요. 파장의 1/20 = 200 ÷ 20 = <span class="c2">10 m</span>. 수심 5 m는 이보다 깊나요, 얕나요?',null],
+  exp:'파장의 1/20 = 10 m이고 수심 5 m는 이보다 얕으므로 <span class="c2">천해파</span>예요.',
+  rq:{q:'[보충] 파장이 100 m인 해파가 수심 20 m인 곳을 지나고 있습니다. 이 해파의 종류는?',o:['심해파','전이파','천해파'],a:1,
+   fb:['파장의 1/2 = 50 m예요. 수심 20 m는 50 m보다 깊나요?',null,'파장의 1/20 = 5 m예요. 수심 20 m는 5 m보다 얕나요?'],exp:'5 m(1/20) < 수심 20 m < 50 m(1/2)이므로 <span class="c3">전이파</span>예요.'}}];
+const ES=[
+ {id:4,stage:1,title:'물 입자의 운동과 해파의 전파',
+  q:'바다 위에 떠 있는 오리 인형이 파도가 밀려올 때도 멀리 떠내려가지 않고 제자리에 가까운 곳에서 위아래로 움직이는 까닭을 해파의 에너지 전달과 관련지어 간단히 서술하시오.',
+  model:'해파가 진행할 때 물 입자는 제자리에서 주기적인 원운동을 하며 에너지와 파의 모양만 전달하고 바닷물 자체는 직접 이동하지 않기 때문이다.',
+  rub:[{k:'물 입자의 원운동',re:/(원\s*운동|원을\s*그|원\s*모양|원형|빙글|회전|타원)/,hint:'1단계 잔상 모드에서 오리 인형이 그린 <span class="c2">경로의 모양</span>을 떠올려 써 보세요.'},
+       {k:'에너지(파의 모양) 전달',re:/(에너지|파의\s*모양|파형|모양만)/,hint:'파도가 진행할 때 멀리 전달되는 것은 무엇일까요? <span class="c1">에너지</span>와 관련지어 쓰세요.'},
+       {k:'바닷물 자체는 이동하지 않음',re:/((이동|움직|떠내려|나아가|흘러|밀려)[가-힣]{0,4}\s*(않|못|안\s))|제자리|그\s*자리|이동\s*없/,hint:'물(바닷물) 자체가 파도와 함께 <span class="c3">앞으로 이동하는지</span>에 대해서도 써 주세요.'}]},
+ {id:5,stage:2,title:'심해파와 천해파 비교',
+  q:'심해파와 천해파를 구분하는 기준을 수심과 파장의 관계로 쓰고, 두 해파에서 물 입자의 운동 모양이 어떻게 다른지 간단히 서술하시오.',
+  model:'심해파는 수심이 파장의 1/2보다 깊은 해파로 물 입자가 원운동을 하며 깊어질수록 원이 작아지고, 천해파는 수심이 파장의 1/20보다 얕은 해파로 해저의 영향을 받아 물 입자가 납작한 타원 운동을 한다.',
+  rub:[{k:'심해파: 수심 > 파장의 1/2',re:/(1\s*\/\s*2|2\s*분의\s*1|이분의\s*일|절반|½)/,hint:'심해파가 되려면 수심이 파장의 <span class="c1">얼마</span>보다 깊어야 하는지 써 주세요.'},
+       {k:'천해파: 수심 < 파장의 1/20',re:/(1\s*\/\s*20|20\s*분의\s*1|이십분의\s*일)/,hint:'천해파가 되려면 수심이 파장의 <span class="c2">얼마</span>보다 얕아야 하는지 써 주세요.'},
+       {k:'심해파의 원운동',re:/((?<!타)원\s*(운동|모양|을\s*그|형))/,hint:'2단계에서 수심이 깊을 때 물 입자가 그린 <span class="c1">궤도 모양</span>을 써 주세요.'},
+       {k:'천해파의 타원 운동',re:/타원/,hint:'수심이 아주 얕을 때 물 입자의 궤도는 어떤 <span class="c2">모양</span>이었나요?'},
+       {k:'해저의 영향',re:/(해저|바닥|해양\s*바닥)/,hint:'천해파의 물 입자 운동이 달라지는 <span class="c4">원인(해저)</span>을 써 주세요.'}]}];
+const MC_MAX=10,MC_REM_FIRST=8,MC_REM=6,MC_RETRY=4;
+MC.forEach(m=>S.mc[m.id]={tries:0,first:null,solved:false,pick:[],fb:null,rem:null});
+ES.forEach(e=>S.es[e.id]={text:'',subs:0,best:0,hits:[],fbHTML:''});
+
+function renderEval(){
+  const remItems=MC.filter(m=>S.mc[m.id].rem);
+  let h='';
+  if(S.remedial&&(S.remedial.type==='mc'||S.remedial.type==='es'))h+=`<div class="banner">🔁 보충 학습 진행 중 — 아래 보충 문항을 해결한 뒤 <button class="btn o" onclick="showTab(${RES_TAB})">📊 결과로 돌아가기</button></div>`;
+  h+=`<div class="card"><h2 class="st">📝 최종 점검 — 학습 점검 퀴즈 & 서술형</h2>
+   <div class="npc"><div class="av">🧭</div><div class="bub"><div class="who">한바다 선장</div>오리 인형부터 해저 탐사까지, 항해에서 배운 것을 점검할 시간이네! 객관식은 <span class="c2">첫 번째 시도</span>에 맞히면 만점이고, 틀리면 피드백을 보고 다시 도전할 수 있네. 서술형은 <span class="c1">핵심 요소</span>를 빠짐없이 써야 하고, 피드백을 보고 고쳐 쓸 수 있다네.</div></div></div>`;
+  if(remItems.length){h+=`<div class="card"><h3>🔁 보충 문항</h3>${remItems.map(m=>`<div id="mc_${m.id}_rem">${mcHTML(m,'rem')}</div>`).join('')}</div>`;}
+  h+=`<div class="card"><h3>🔹 객관식 문항</h3>${MC.map(m=>`<div id="mc_${m.id}_main">${mcHTML(m,'main')}</div>`).join('')}</div>`;
+  h+=`<div class="card"><h3>🔸 서술형 문항</h3>${ES.map(e=>esHTML(e)).join('')}</div>`;
+  const ready=MC.every(m=>S.mc[m.id].solved)&&ES.every(e=>S.es[e.id].subs>0);
+  h+=`<div class="card" style="text-align:center">${S.evalDone?`<button class="btn o" onclick="showTab(${RES_TAB})">🏆 미션 성공 탭 보기</button>`:`<p class="muted small">객관식 ${MC.length}문항을 모두 해결하고 서술형 ${ES.length}문항을 한 번 이상 제출하면 결과를 확인할 수 있어요.</p><button class="btn o" id="finishBtn" ${ready?'':'disabled'}>🏁 미션 결과 확인하기</button>`}</div>`;
+  $('#evalWrap').innerHTML=h;bindEval();
+}
+function mcHTML(m,mode){const st=mode==='main'?S.mc[m.id]:S.mc[m.id].rem,q=mode==='main'?m:m.rq;
+  return `<div class="qblock"><div class="qnum">문항 ${m.id}${mode==='rem'?' 보충':''} · ${m.concept}</div><div class="qtext">${q.q}</div>
+   ${q.o.map((o,j)=>`<button class="opt ${st.solved&&j===q.a?'right':''} ${st.pick.includes(j)&&j!==q.a?'wrong':''}" data-id="${m.id}" data-mode="${mode}" data-j="${j}" ${st.solved?'disabled':''}>${'①②③④'[j]} ${o}</button>`).join('')}
+   ${st.fb?`<div class="fb show ${st.fb.t}">${st.fb.h}</div>`:''}</div>`;}
+function esHTML(e){const st=S.es[e.id];
+  return `<div class="qblock" id="es_${e.id}"><div class="qnum">문항 ${e.id} · 서술형 · ${e.title}</div><div class="qtext">${e.q}</div>
+   <textarea id="ta_${e.id}" placeholder="여기에 답안을 작성하세요.">${esc(st.text)}</textarea>
+   <div class="row"><button class="btn" data-es="${e.id}">✍ 답안 제출 및 피드백 받기</button><span class="small muted">제출 ${st.subs}회 · 현재 점수 <span class="c2">${st.best} / 10</span></span></div>
+   ${st.fbHTML?`<div class="fb show ${st.best>=10?'ok':'no'}">${st.fbHTML}</div>`:''}</div>`;}
+function bindEval(){const w=$('#evalWrap');
+  $$('.opt',w).forEach(b=>b.onclick=()=>answerMC(+b.dataset.id,b.dataset.mode,+b.dataset.j));
+  $$('textarea',w).forEach(t=>t.oninput=()=>{S.es[+t.id.split('_')[1]].text=t.value;});
+  $$('[data-es]',w).forEach(b=>b.onclick=()=>gradeES(+b.dataset.es));
+  const fbtn=$('#finishBtn');if(fbtn)fbtn.onclick=()=>{S.evalDone=true;S.unlocked=RES_TAB;refreshTabs();showTab(RES_TAB);};}
+function answerMC(id,mode,j){const m=MC.find(x=>x.id===id),st=mode==='main'?S.mc[id]:S.mc[id].rem,q=mode==='main'?m:m.rq;if(st.solved)return;
+  st.tries++;const ok=j===q.a;if(st.first===null)st.first=ok;st.pick.push(j);
+  if(ok){st.solved=true;st.fb={t:'ok',h:'⭕ 정답! '+q.exp+(st.first?'':' <span class="small">(다시 도전해서 해결했어요)</span>')};}
+  else st.fb={t:'no',h:'❌ '+q.fb[j]+' <span class="small">다시 골라 보세요. (관련: '+m.stage+'단계)</span>'};
+  if(mode==='rem'&&st.solved&&S.remedial&&S.remedial.type==='mc'&&S.remedial.id===id)S.remedial=null;
+  const box=$(`#mc_${id}_${mode}`);if(box)box.innerHTML=mcHTML(m,mode);bindEval();
+  const fbtn=$('#finishBtn');if(fbtn)fbtn.disabled=!(MC.every(x=>S.mc[x.id].solved)&&ES.every(e=>S.es[e.id].subs>0));}
+function gradeES(id){const e=ES.find(x=>x.id===id),st=S.es[id],txt=($('#ta_'+id).value||'').trim();st.text=txt;
+  if(txt.length<10){toast('답안을 조금 더 자세히(10자 이상) 작성해 주세요.');return;}
+  st.subs++;const hits=e.rub.map(r=>r.re.test(txt));const n=hits.filter(Boolean).length;const sc=Math.round(10*n/e.rub.length);
+  st.hits=hits;st.last=sc;if(sc>st.best)st.best=sc;
+  let h=`<div>📋 채점 결과: 핵심 요소 <span class="c2">${n} / ${e.rub.length}</span>개 포함 → <span class="c2">${sc}점</span>${st.best>sc?` (최고 ${st.best}점 유지)`:''}</div>`;
+  h+=e.rub.map((r,k)=>hits[k]?`<div class="c3">✔ ${r.k}</div>`:`<div>✎ <span class="c5">${r.k}</span> — ${r.hint}</div>`).join('');
+  if(n===e.rub.length)h+=`<div style="margin-top:6px" class="c3">🎉 핵심 요소를 모두 포함한 훌륭한 답안이에요!</div>`;
+  if(n===e.rub.length||st.subs>=2)h+=`<div style="margin-top:6px">📘 모범 답안: <span class="c1">${e.model}</span></div>`;
+  else h+=`<div style="margin-top:6px" class="small">피드백을 참고해 답안을 고쳐 다시 제출해 보세요. (2회 제출 후 모범 답안 공개)</div>`;
+  st.fbHTML=h;if(S.remedial&&S.remedial.type==='es'&&S.remedial.id===id&&st.best>=10)S.remedial=null;renderEval();
+  setTimeout(()=>{const el=$('#es_'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},60);}
+
+/* ================= 결과 ================= */
+function mcPts(id){const s=S.mc[id];if(!s.solved)return 0;if(s.first)return MC_MAX;if(s.rem&&s.rem.solved)return s.rem.first?MC_REM_FIRST:MC_REM;return MC_RETRY;}
+function calc(){const stages=[];for(let n=1;n<=NST;n++)stages.push(Math.max(0,S.st[n].best));const mc=MC.map(m=>mcPts(m.id));const es=ES.map(e=>S.es[e.id].best);
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  return {stages,mc,es,mcSum:sum(mc),esSum:sum(es),total:+(sum(stages)+sum(mc)+sum(es)).toFixed(1)};}
+function grade(t){return t>=90?'A':t>=80?'B':t>=70?'C':t>=60?'D':'F';}
+const GCOL={A:'#0f9168',B:'#1a6fd6',C:'#0a8ea0',D:'#e2631f',F:'#d42f4b'};
+const ISSUE={1:{q1:'오리 인형 이동 경로 해석',q2:'바닷물의 이동 여부 판단',q3:'깊이에 따른 원운동 크기 변화 해석',q4:'해파가 전달하는 것 판단'},
+ 2:{sort:'수심과 파장의 비율로 해파 분류하기',motion:'수심(해저 영향)에 따른 물 입자 운동 해석'}};
+const GOOD={1:'잔상 모드로 오리 인형의 경로를 관찰하고 물 입자의 원운동과 에너지 전달을 해석하는 과정',
+ 2:'수심과 파장을 바꾸어 가며 세 종류의 해파를 탐색하고 기준(파장의 1/2, 1/20)에 따라 분류한 뒤 물 입자 운동의 차이를 해석하는 과정'};
+const ADV={1:'잔상의 원 모양과 출발 위치로 되돌아오는 모습을 근거로 “물은 제자리, 에너지와 파의 모양만 이동”을 연결해 보세요.',
+ 2:'“수심 > 파장의 1/2 → 심해파(원운동), 수심 < 파장의 1/20 → 천해파(타원 운동)”라는 기준값을 먼저 계산한 뒤 비교하면 실수를 줄일 수 있습니다.'};
+function buildFeedback(R){const g=grade(R.total),nm=S.name||'예비 선장';const P=[];
+  const gc={A:'관찰·분류·해석의 전 과정이 매우 안정적이며, 물 입자의 운동과 심해파·전이파·천해파를 근거와 함께 설명할 수 있는 수준입니다.',B:'대부분의 과정을 정확히 수행했으며, 일부 개념에서 보이는 작은 혼동만 보완하면 최고 수준에 도달할 수 있습니다.',C:'핵심 개념은 이해했지만 분류·해석·서술 과정에서 반복된 시행착오가 있어 보완이 필요합니다.',D:'미션을 끝까지 완수한 점은 훌륭하지만, 여러 개념에서 오류가 나타나 단계별 복습이 필요합니다.',F:'미션을 완수한 끈기는 칭찬할 만하지만, 기본 개념 정리가 더 필요합니다. 아래 보충 시뮬레이션부터 차근차근 다시 해 봅시다.'}[g];
+  const mins=Math.max(1,Math.round((Date.now()-S.start)/60000));
+  P.push(`<span class="c2">${esc(nm)}</span> 선장은 ${NST}단계 항해 미션과 최종 점검을 모두 마쳐 총 <span style="color:${GCOL[g]}">${R.total}점(${g}등급)</span>을 받았습니다. 약 ${mins}분 동안 탐구하였으며, ${gc}`);
+  for(let n=1;n<=NST;n++){const s=S.st[n],d=s.bestDetail||{errors:0,hints:0,detail:{}};
+   if(d.errors===0&&d.hints===0)P.push(`${n}단계 「${STAGE_TITLE[n]}」에서는 ${GOOD[n]}을 <span class="c3">한 번의 오류도 없이</span> 정확하게 수행했습니다.${s.runs>1?' 보충 시뮬레이션으로 다시 도전해 완벽한 수행을 만들어 낸 점이 인상적입니다.':''}`);
+   else{const iss=Object.keys(d.detail).map(k=>`${ISSUE[n][k]}(${d.detail[k]}회)`);
+    let t=`${n}단계 「${STAGE_TITLE[n]}」에서는 ${GOOD[n]}을 끝까지 완수했습니다. 다만 `;
+    if(iss.length)t+=`<span class="c5">${iss.join(', ')}</span> 과정에서 시행착오가 있었${d.hints?'고, ':'습니다.'}`;
+    if(d.hints)t+=`힌트를 <span class="c4">${d.hints}회</span> 사용했습니다.`;
+    t+=' '+ADV[n]+(s.runs>1?' 보충 시뮬레이션에 다시 도전한 노력도 기록되었습니다.':'');P.push(t);}}
+  const firstOk=MC.filter(m=>S.mc[m.id].first===true),wrong=MC.filter(m=>S.mc[m.id].first===false);
+  P.push(`객관식 ${MC.length}문항 중 <span class="c3">${firstOk.length}문항</span>을 첫 시도에 맞혔습니다(${R.mcSum}/${MC.length*MC_MAX}점).${wrong.length?` <span class="c5">${wrong.map(m=>m.concept).join(', ')}</span> 문항은 첫 시도에 틀렸지만 피드백을 읽고 스스로 정답을 찾아냈습니다${wrong.some(m=>S.mc[m.id].rem&&S.mc[m.id].rem.solved)?'(보충 문항 해결 포함)':''}. 해당 개념을 한 번 더 정리해 두면 좋겠습니다.`:' 기본 개념을 정확히 이해하고 있습니다.'}`);
+  ES.forEach(e=>{const st=S.es[e.id],miss=e.rub.filter((r,k)=>!st.hits[k]).map(r=>r.k);
+   P.push(`서술형 ${e.id}번(${e.title})은 ${st.subs}회 제출하여 ${st.best}/10점을 받았습니다. ${miss.length?`최종 답안에서 <span class="c5">${miss.join(', ')}</span> 요소가 빠져 있으므로, 이 내용을 문장에 포함하면 더 완성도 높은 설명이 됩니다.`:`핵심 요소를 모두 포함하여 과학적으로 완성도 높은 설명을 했습니다.${st.subs>1?' 피드백을 반영해 답안을 고쳐 쓴 과정이 돋보입니다.':''}`}`);});
+  const weak=weakList(R);
+  if(g==='A')P.push('최고 등급을 달성했습니다! 이제 실제 바다 영상에서 떠 있는 물체의 움직임을 관찰하고, 먼 바다와 해안 근처의 파도가 각각 어떤 해파인지 오늘 배운 기준으로 설명해 보세요.');
+  else if(weak.length)P.push(`다음 등급으로 올라가려면 아래 “등급 상향 안내”에 표시된 <span class="c2">부족한 수행 과정만</span> 골라 보충 시뮬레이션을 수행하세요. 이미 충분히 잘한 부분은 다시 할 필요가 없습니다.`);
+  return P;}
+function weakList(R){const L=[];
+  for(let n=1;n<=NST;n++){const b=S.st[n].best;if(b<STMAX-2){const d=S.st[n].bestDetail||{detail:{}};L.push({kind:'stage',n,gain:+(STMAX-b).toFixed(1),label:`${n}단계 「${STAGE_TITLE[n]}」 보충 시뮬레이션`,desc:'부족했던 과정: '+(Object.keys(d.detail).map(k=>ISSUE[n][k]).join(', ')||'힌트 사용'),act:`startRemStage(${n})`});}}
+  MC.forEach(m=>{const p=mcPts(m.id);if(p<MC_REM_FIRST)L.push({kind:'mc',n:m.id,gain:MC_REM_FIRST-p,label:`객관식 ${m.id}번 보충 문항 (${m.concept})`,desc:`첫 시도 오답 → 유사 문항을 한 번에 맞히면 ${MC_REM_FIRST}점으로 상향`,act:`startRemMC(${m.id})`});});
+  ES.forEach(e=>{const b=S.es[e.id].best;if(b<10)L.push({kind:'es',n:e.id,gain:10-b,label:`서술형 ${e.id}번 고쳐 쓰기 (${e.title})`,desc:'빠진 요소: '+e.rub.filter((r,k)=>!S.es[e.id].hits[k]).map(r=>r.k).join(', '),act:`startRemES(${e.id})`});});
+  return L;}
+function startRemStage(n){S.remedial={type:'stage',n};const s=S.st[n];s.errors=0;s.hints=0;s.detail={};$('#done'+n).classList.remove('show');$('#ban'+n).classList.remove('hidden');STG[n].reset();showTab(n);toast(`🔁 ${n}단계 보충 시뮬레이션을 시작합니다.`);}
+function startRemMC(id){S.mc[id].rem={tries:0,first:null,solved:false,pick:[],fb:null};S.remedial={type:'mc',id};showTab(EVAL_TAB);setTimeout(()=>{const el=$(`#mc_${id}_rem`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},300);}
+function startRemES(id){S.remedial={type:'es',id};showTab(EVAL_TAB);setTimeout(()=>{const el=$('#es_'+id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});const t=$('#ta_'+id);if(t)t.focus();}},300);}
+function scoreRows(R){const rows=[];for(let n=1;n<=NST;n++)rows.push([`${n}단계 ${STAGE_SHORT[n]}`,R.stages[n-1],STMAX]);rows.push([`객관식 (${MC.length}문항)`,R.mcSum,MC.length*MC_MAX],[`서술형 (${ES.length}문항)`,R.esSum,ES.length*10]);return rows;}
+function pcol(p){return p>=0.9?'#0f9168':p>=0.75?'#1a6fd6':p>=0.6?'#e2631f':'#d42f4b';}
+
+function renderResult(){const R=calc(),g=grade(R.total),col=GCOL[g],P=buildFeedback(R),W=weakList(R);
+  const th=[60,70,80,90],next=th.find(t=>t>R.total),nextG=next?grade(next):null;
+  $('#resWrap').innerHTML=`
+  <div class="card res-hero">
+   <div class="medal" style="border-color:${col};color:${col}">${g}</div>
+   <div style="flex:1;min-width:260px"><h2 class="st">🏆 미션 성공! 파도 마스터 인증</h2>
+    <div class="row">학번 <input type="text" id="r_sid" value="${esc(S.sid)}" style="width:120px"> 이름 <input type="text" id="r_name" value="${esc(S.name)}" style="width:150px"></div>
+    <p style="margin:4px 0">총점 <span style="color:${col};font-size:22px">${R.total} / 100</span> · 등급 <span style="color:${col};font-size:22px">${g}</span></p>
+    <div class="ctrl"><button class="btn o" onclick="downloadImg()">🖼 결과 이미지 다운로드 (PNG)</button></div></div>
+  </div>
+  <div class="grid2" style="margin-top:0">
+   <div class="card"><h3>📊 영역별 점수</h3>${scoreRows(R).map(r=>{const c=pcol(r[1]/r[2]);return `<div class="srow"><span>${r[0]}</span><div class="bar"><i style="width:${r[1]/r[2]*100}%;background:${c}"></i></div><span style="color:${c};text-align:right">${r[1]} / ${r[2]}</span></div>`;}).join('')}</div>
+   <div class="card"><h3>📏 평가 기준 (5단계)</h3><table class="tb gradetbl"><tr><th>등급</th><th>점수</th><th>수준</th></tr>
+    <tr><td style="color:${GCOL.A}">A</td><td>90점 이상</td><td>개념을 근거와 함께 설명</td></tr><tr><td style="color:${GCOL.B}">B</td><td>80~89점</td><td>대부분 정확, 일부 혼동</td></tr>
+    <tr><td style="color:${GCOL.C}">C</td><td>70~79점</td><td>핵심 이해, 시행착오 반복</td></tr><tr><td style="color:${GCOL.D}">D</td><td>60~69점</td><td>여러 개념 보완 필요</td></tr><tr><td style="color:${GCOL.F}">F</td><td>60점 미만</td><td>기본 개념 재학습 필요</td></tr></table>
+    <p class="small muted">단계 점수: ${STMAX}점 − 오류 1회당 2점 − 힌트 1회당 1점 (최저 8점) · 객관식: 첫 시도 정답 ${MC_MAX}점 / 보충 문항 첫 시도 정답 ${MC_REM_FIRST}점 / 보충 문항 재시도 정답 ${MC_REM}점 / 재시도 정답 ${MC_RETRY}점</p></div>
+  </div>
+  <div class="card"><h3>✍ 학생이 작성한 내용</h3>${ES.map(e=>`<div class="qnum">서술형 ${e.id}번 · ${e.title} <span class="c2">(${S.es[e.id].best}/10)</span></div><div class="small muted">${e.q}</div><div class="answer">${esc(S.es[e.id].text)||'(작성 내용 없음)'}</div>`).join('')}</div>
+  <div class="card"><h3>🧭 과제 수행 과정 피드백</h3>${P.map(p=>`<p class="fbpara">${p}</p>`).join('')}</div>
+  <div class="card"><h3>🚀 등급 상향 안내</h3>${g==='A'?`<p class="c3">🎉 최고 등급 A를 달성했어요! 더 보충할 과정이 없습니다.</p>${W.length?`<p class="small muted">(선택) 만점에 도전하려면: ${W.map(w=>w.label).join(', ')}</p>`:''}`:
+   `<p>현재 <span style="color:${col}">${R.total}점(${g})</span> → <span style="color:${GCOL[nextG]}">${nextG}등급</span>까지 <span class="c2">${+(next-R.total).toFixed(1)}점</span>이 더 필요해요. 아래는 점수가 부족했던 수행 과정만 모은 목록이에요. 필요한 것만 골라 보충하세요!</p>
+   ${W.map(w=>`<div class="weak"><div><div>${w.kind==='stage'?'🔁':w.kind==='mc'?'❓':'✍'} ${w.label} <span class="c3">(최대 +${w.gain}점)</span></div><div class="small muted">${w.desc}</div></div><button class="btn o" onclick="${w.act}">보충 시작 ▶</button></div>`).join('')}
+   <p class="small muted">보충 결과는 기존보다 높을 때만 반영됩니다. 보충을 마치면 이 탭으로 돌아와 새로운 등급을 확인하세요.</p>`}</div>`;
+  $('#r_name').oninput=e=>{S.name=e.target.value;$('#in_name').value=S.name;};$('#r_sid').oninput=e=>{S.sid=e.target.value;$('#in_sid').value=S.sid;};}
+
+/* ---------- 결과 이미지 ---------- */
+function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent;}
+function wrapLines(c,text,maxW){const out=[];String(text).split('\n').forEach(par=>{let line='';for(const ch of par){const t=line+ch;if(c.measureText(t).width>maxW&&line){out.push(line);line=ch.trim()===''?'':ch;}else line=t;}out.push(line);});return out;}
+function downloadImg(){const R=calc(),g=grade(R.total),P=buildFeedback(R).map(strip),Wk=weakList(R);const W=1100,PAD=56,CW=W-PAD*2;
+  const cv=document.createElement('canvas');const c=cv.getContext('2d');
+  const draw=dry=>{let y=0;
+   const txt=(s,x,yy,sz,col,al)=>{if(dry)return;c.font=F(sz);c.fillStyle=col;c.textAlign=al||'left';c.fillText(s,x,yy);};
+   const para=(s,sz,col,lh,x,w)=>{c.font=F(sz);const ls=wrapLines(c,s,w||CW);ls.forEach(l=>{y+=lh;txt(l,x||PAD,y,sz,col);});};
+   const sec=t=>{y+=34;if(!dry){c.fillStyle='#11598a';c.fillRect(PAD,y-20,6,26);}txt(t,PAD+16,y,24,'#11598a');y+=8;};
+   if(!dry){c.fillStyle='#ffffff';c.fillRect(0,0,W,cv.height);const gr=c.createLinearGradient(0,0,W,0);gr.addColorStop(0,'#0b3a5e');gr.addColorStop(1,'#1d8fc4');c.fillStyle=gr;c.fillRect(0,0,W,170);
+    const lg=$('#logoImg');c.fillStyle='#fff';c.fillRect(W-330,24,92,92);if(lg&&lg.complete)c.drawImage(lg,W-328,26,88,88);}
+   txt('EARTH LJY',W-212,60,24,'#ffffff');txt('earthljy@ai.jne.kr',W-212,86,16,'#d8efff');
+   txt('🌊 파도 마스터: 물 입자 운동과 해파의 분류',PAD,78,32,'#ffffff');txt('미션 성공 보고서 · 고등학교 2학년 지구시스템과학',PAD,118,19,'#cfe8fb');
+   y=170;y+=56;txt(`학번 ${S.sid||'-'}   이름 ${S.name||'-'}   날짜 ${new Date().toLocaleDateString('ko-KR')}`,PAD,y,22,'#24394d');
+   y+=42;txt(`총점 ${R.total} / 100`,PAD,y,30,GCOL[g]);
+   if(!dry){c.strokeStyle=GCOL[g];c.lineWidth=10;c.fillStyle='#fff';c.beginPath();c.arc(W-PAD-70,y-4,62,0,TAU);c.fill();c.stroke();}
+   txt(g,W-PAD-70,y+21,70,GCOL[g],'center');y+=44;
+   sec('📊 영역별 점수');
+   scoreRows(R).forEach(r=>{y+=36;const p=r[1]/r[2],col=pcol(p);txt(r[0],PAD,y,18,'#24394d');
+    if(!dry){c.fillStyle='#e1edf5';c.fillRect(PAD+430,y-14,420,14);c.fillStyle=col;c.fillRect(PAD+430,y-14,420*p,14);}txt(`${r[1]} / ${r[2]}`,W-PAD,y,18,col,'right');});y+=14;
+   sec('✍ 학생이 작성한 내용');
+   ES.forEach(e=>{y+=8;para(`서술형 ${e.id}번 · ${e.title} (${S.es[e.id].best}/10)`,19,'#e2631f',30);para(S.es[e.id].text||'(작성 내용 없음)',18,'#24394d',29,PAD+16,CW-16);y+=6;});
+   sec('🧭 과제 수행 과정 피드백');
+   P.forEach(p=>{para(p,17.5,'#24394d',28);y+=10;});
+   sec('🚀 등급 상향 안내');
+   if(g==='A')para('최고 등급 A를 달성했습니다. 더 보충할 과정이 없습니다.',18,'#0f9168',30);
+   else{const nx=[60,70,80,90].find(t=>t>R.total);para(`${grade(nx)}등급까지 ${+(nx-R.total).toFixed(1)}점 필요 — 아래 과정만 보충하면 됩니다.`,18,'#e2631f',30);Wk.forEach(w=>para(`· ${w.label} (최대 +${w.gain}점)`,17.5,'#24394d',28,PAD+10,CW-10));}
+   y+=50;if(!dry){c.fillStyle='#eef5fa';c.fillRect(0,y-30,W,60);}txt('파도 마스터: 물 입자 운동과 해파의 분류 · EARTH LJY · earthljy@ai.jne.kr',W/2,y+6,15,'#5f7387','center');y+=30;
+   return y;};
+  const H=Math.ceil(draw(true));cv.width=W;cv.height=H;draw(false);
+  const fname=`파도마스터_물입자_해파분류_결과_${(S.sid||'')}${S.name||'학생'}.png`;
+  const go=url=>{const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);};
+  try{cv.toBlob(b=>{if(b){const u=URL.createObjectURL(b);go(u);setTimeout(()=>URL.revokeObjectURL(u),3000);}else go(cv.toDataURL('image/png'));},'image/png');}catch(err){go(cv.toDataURL('image/png'));}
+  toast('🖼 결과 이미지를 저장했어요!');}
+
+/* ================= 시작 ================= */
+const STG={1:S4,2:S3};
+let lastTs=0;function loop(ts){const dt=lastTs?Math.min(0.05,(ts-lastTs)/1000):0;lastTs=ts;const c=S.cur;if(c>=1&&c<=NST)STG[c].frame(dt);requestAnimationFrame(loop);}
+window.addEventListener('DOMContentLoaded',()=>{
+  buildTabs();S4.init();S3.init();
+  $('#in_name').oninput=e=>S.name=e.target.value;$('#in_sid').oninput=e=>S.sid=e.target.value;
+  $('#startBtn').onclick=()=>{S.name=$('#in_name').value.trim();S.sid=$('#in_sid').value.trim();if(!S.name){toast('이름을 입력하면 결과 보고서에 표시돼요. (나중에 입력해도 괜찮아요)');}
+    if(S.unlocked<1){S.unlocked=1;S.start=Date.now();}showTab(1);};
+  requestAnimationFrame(loop);});
+</script>
+</body>
+</html>
